@@ -5,7 +5,6 @@ const Election = require("../models/Elections");
 
 const router = express.Router();
 
-/** ✅ Get All Elections (For Admin & Voters) */
 router.get("/allelections", requireLogin, async (req, res) => {
   try {
     const elections = await Election.find().select(
@@ -41,7 +40,6 @@ router.get("/allelections", requireLogin, async (req, res) => {
   }
 });
 
-/** ✅ Create a New Election (Admin Only) */
 router.post("/createelection", requireLogin, async (req, res) => {
   if (!req.user?.isAdmin) {
     return res.status(403).json({ error: "Unauthorized: Admins only" });
@@ -70,7 +68,6 @@ router.post("/createelection", requireLogin, async (req, res) => {
   }
 });
 
-/** ✅ Update Election (Admin Only) */
 router.put("/updateelection/:id", requireLogin, async (req, res) => {
   if (!req.user?.isAdmin) {
     return res.status(403).json({ error: "Unauthorized: Admins only" });
@@ -95,7 +92,6 @@ router.put("/updateelection/:id", requireLogin, async (req, res) => {
   }
 });
 
-/** ✅ Delete Election (Admin Only) */
 router.delete("/deleteelection/:id", requireLogin, async (req, res) => {
   if (!req.user?.isAdmin) {
     return res.status(403).json({ error: "Unauthorized: Admins only" });
@@ -114,7 +110,6 @@ router.delete("/deleteelection/:id", requireLogin, async (req, res) => {
   }
 });
 
-/** ✅ Vote for a Candidate (One Vote Per Election) */
 router.put("/vote", requireLogin, async (req, res) => {
   const { electionId, candidateId } = req.body;
 
@@ -149,14 +144,13 @@ router.put("/vote", requireLogin, async (req, res) => {
   }
 });
 
-/** ✅ Admin Releases Election Results */
 router.put("/releaseresults/:id", requireLogin, async (req, res) => {
   if (!req.user?.isAdmin) {
     return res.status(403).json({ error: "Unauthorized: Admins only" });
   }
 
   try {
-    console.log("Election ID:", req.params.id); // Debugging
+    console.log("Election ID:", req.params.id);
 
     const election = await Election.findById(req.params.id);
     if (!election) {
@@ -174,7 +168,6 @@ router.put("/releaseresults/:id", requireLogin, async (req, res) => {
   }
 });
 
-/** ✅ Get Election Results (Only If Announced) */
 router.get("/results", requireLogin, async (req, res) => {
   try {
     const elections = await Election.find();

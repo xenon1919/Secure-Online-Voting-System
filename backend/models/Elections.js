@@ -11,7 +11,7 @@ const electionSchema = new mongoose.Schema({
   title: { type: String, required: true },
   candidates: [candidateSchema],
   votes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  resultsAnnounced: { type: Boolean, default: false }, // ✅ Added field
+  resultsAnnounced: { type: Boolean, default: false },
 });
 
 const Election = mongoose.model("Election", electionSchema);

@@ -13,13 +13,11 @@ module.exports = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
 
-    // If admin login, directly assign user object
     if (decoded.isAdmin) {
       req.user = { isAdmin: true };
       return next();
     }
 
-    // If normal user, fetch from database
     const user = await User.findById(decoded._id);
     if (!user) {
       return res.status(401).json({ error: "User not found" });

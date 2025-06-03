@@ -6,7 +6,6 @@ const router = express.Router();
 const Post = mongoose.model("Post");
 const User = mongoose.model("User");
 
-// **🔹 Cast Vote (PUT /vote)**
 router.put("/vote", requireLogin, async (req, res) => {
   try {
     const { postId } = req.body;
@@ -21,12 +20,10 @@ router.put("/vote", requireLogin, async (req, res) => {
       return res.status(404).json({ error: "Candidate not found" });
     }
 
-    // **🔸 Prevent multiple votes**
     if (post.votes.includes(userId)) {
       return res.status(400).json({ error: "You have already voted" });
     }
 
-    // **🔸 Add vote**
     post.votes.push(userId);
     await post.save();
 
@@ -37,7 +34,6 @@ router.put("/vote", requireLogin, async (req, res) => {
   }
 });
 
-// **🔹 Get All Candidates (GET /allpost)**
 router.get("/allpost", async (req, res) => {
   try {
     const posts = await Post.find().populate("votes", "_id name");
@@ -48,7 +44,6 @@ router.get("/allpost", async (req, res) => {
   }
 });
 
-// **🔹 Get Election Results (GET /results)**
 router.get("/results", async (req, res) => {
   try {
     const results = await Post.find()

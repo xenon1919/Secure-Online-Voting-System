@@ -3,7 +3,7 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../../App";
-import M from "materialize-css";
+import Swal from "sweetalert2"; // ✅ Import SweetAlert2
 import ReCAPTCHA from "react-google-recaptcha"; // ✅ Import reCAPTCHA
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -68,6 +68,7 @@ const SignIn = () => {
       otpRefs.current[index + 1].focus();
     }
   };
+
   const onCaptchaChange = (value) => {
     setCaptchaValue(value);
     setCaptchaError(""); // ✅ Clear error when user completes the captcha
@@ -81,9 +82,12 @@ const SignIn = () => {
 
   const sendOtp = async () => {
     if (!email || !password) {
-      M.toast({
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
         html: "⚠️ Email and Password are required!",
-        classes: "text-danger",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "OK",
       });
       return;
     }
@@ -109,7 +113,7 @@ const SignIn = () => {
       const response = await fetch("http://localhost:5000/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, recaptchaToken: captchaValue }), // ✅ Send token
+        body: JSON.stringify({ email, password, recaptchaToken: captchaValue }),
       });
 
       const data = await response.json();
@@ -118,21 +122,36 @@ const SignIn = () => {
       console.log("✅ Response received:", data);
 
       if (data.error) {
-        M.toast({ html: `❌ ${data.error}`, classes: "text-danger" });
+        Swal.fire({
+          icon: "error",
+          title: "Login Failed",
+          html: `❌ ${data.error}`,
+          confirmButtonColor: "#d33",
+          confirmButtonText: "Try Again",
+        });
       } else {
         setUserId(data.userId);
         setOtpSent(true);
         startTimer();
         otpRefs.current[0].focus();
-        M.toast({
+        Swal.fire({
+          icon: "success",
+          title: "OTP Sent",
           html: "📩 OTP sent to your email",
-          classes: "text-success",
+          timer: 2000,
+          showConfirmButton: false,
         });
       }
     } catch (err) {
       setLoading(false);
       console.error("❌ Error:", err);
-      M.toast({ html: "❌ Network error!", classes: "text-danger" });
+      Swal.fire({
+        icon: "error",
+        title: "Network Error",
+        html: "❌ Network error!",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "OK",
+      });
     }
   };
 
@@ -149,7 +168,13 @@ const SignIn = () => {
       .then((data) => {
         setLoading(false);
         if (data.error) {
-          M.toast({ html: `❌ ${data.error}`, classes: "text-danger" });
+          Swal.fire({
+            icon: "error",
+            title: "OTP Verification Failed",
+            html: `❌ ${data.error}`,
+            confirmButtonColor: "#d33",
+            confirmButtonText: "Try Again",
+          });
         } else {
           setSuccess(true);
           setTimeout(() => {
@@ -163,7 +188,13 @@ const SignIn = () => {
       .catch((err) => {
         setLoading(false);
         console.error(err);
-        M.toast({ html: "❌ Network error!", classes: "text-danger" });
+        Swal.fire({
+          icon: "error",
+          title: "Network Error",
+          html: "❌ Network error!",
+          confirmButtonColor: "#d33",
+          confirmButtonText: "OK",
+        });
       });
   };
 
@@ -235,7 +266,7 @@ const SignIn = () => {
                 <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
               </span>
             </div>
-            {/* ✅ reCAPTCHA with Improved UX */}
+
             {/* ✅ reCAPTCHA with Improved UX */}
             <div className="text-center mt-3" style={{ marginBottom: "15px" }}>
               <ReCAPTCHA

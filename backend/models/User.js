@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
   pic: { type: String, default: "default-profile.png" },
   isAdmin: { type: Boolean, default: false },
   otp: Number,
-  otpExpiry: Date, // ✅ Store OTP Expiry
+  otpExpiry: Date,
 });
 
 module.exports = mongoose.model("User", userSchema);

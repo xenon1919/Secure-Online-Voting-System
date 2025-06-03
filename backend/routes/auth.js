@@ -12,7 +12,6 @@ const { encryptData, decryptData } = require("../utils/encryption");
 const router = express.Router();
 const User = mongoose.model("User");
 
-// ✅ Nodemailer Transporter (Gmail SMTP)
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -21,14 +20,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// ✅ Google reCAPTCHA Secret Key
 const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET;
 
-// ✅ **Fixed Admin Credentials**
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// **📌 User Signup**
 router.post("/signup", async (req, res) => {
   const { name, email, password, aadhaar, city, state, pic } = req.body;
 
@@ -53,7 +49,7 @@ router.post("/signup", async (req, res) => {
       city,
       state,
       pic,
-      isAdmin: false, // Normal users are not admins
+      isAdmin: false,
     });
 
     await user.save();
@@ -64,7 +60,6 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// **📌 User & Admin Login with OTP & reCAPTCHA**
 router.post("/signin", async (req, res) => {
   const { email, password, recaptchaToken } = req.body;
 
@@ -73,7 +68,6 @@ router.post("/signin", async (req, res) => {
   }
 
   try {
-    // ✅ **Verify reCAPTCHA**
     const captchaRes = await axios.post(
       `https://www.google.com/recaptcha/api/siteverify?secret=${RECAPTCHA_SECRET}&response=${recaptchaToken}`
     );
@@ -82,7 +76,6 @@ router.post("/signin", async (req, res) => {
       return res.status(400).json({ error: "reCAPTCHA verification failed" });
     }
 
-    // ✅ **Admin Login**
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
       const token = jwt.sign({ email, isAdmin: true }, JWT_SECRET, {
         expiresIn: "7d",
@@ -95,7 +88,6 @@ router.post("/signin", async (req, res) => {
       });
     }
 
-    // ✅ **Normal User Login**
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(422).json({ error: "Invalid email or password" });
@@ -106,15 +98,13 @@ router.post("/signin", async (req, res) => {
       return res.status(422).json({ error: "Invalid email or password" });
     }
 
-    // ✅ Generate OTP & Store in DB
     const otp = Math.floor(100000 + Math.random() * 900000);
     user.otp = otp;
-    user.otpExpiry = Date.now() + 5 * 60 * 1000; // OTP expires in 5 minutes
+    user.otpExpiry = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    console.log(`📩 Sending OTP ${otp} to ${email}`); // ✅ Debugging Line
+    console.log(`📩 Sending OTP ${otp} to ${email}`);
 
-    // ✅ Send OTP Email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -125,7 +115,6 @@ router.post("/signin", async (req, res) => {
     await transporter.sendMail(mailOptions);
     console.log("✅ OTP Email Sent Successfully!");
 
-    // ✅ **Decrypt Aadhaar before sending user info**
     const decryptedAadhaar = decryptData(user.aadhaar);
 
     res.json({
@@ -133,7 +122,7 @@ router.post("/signin", async (req, res) => {
       userId: user._id,
       user: {
         ...user.toObject(),
-        aadhaar: decryptedAadhaar, // ✅ Decrypted Aadhaar sent
+        aadhaar: decryptedAadhaar,
       },
     });
   } catch (err) {
@@ -142,7 +131,6 @@ router.post("/signin", async (req, res) => {
   }
 });
 
-// ✅ Verify OTP & Generate JWT Token
 router.post("/verify-otp", async (req, res) => {
   const { userId, otp } = req.body;
   if (!userId || !otp) return res.status(422).json({ error: "OTP required" });
@@ -153,19 +141,16 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(401).json({ error: "Invalid or expired OTP" });
     }
 
-    // ✅ Clear OTP after verification
     user.otp = null;
     user.otpExpiry = null;
     await user.save();
 
-    // ✅ Generate JWT Token
     const token = jwt.sign(
       { _id: user._id, isAdmin: user.isAdmin },
       JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // ✅ **Decrypt Aadhaar before sending user info**
     const decryptedAadhaar = decryptData(user.aadhaar);
 
     res.json({
@@ -173,7 +158,7 @@ router.post("/verify-otp", async (req, res) => {
       token,
       user: {
         ...user.toObject(),
-        aadhaar: decryptedAadhaar, // ✅ Decrypted Aadhaar sent
+        aadhaar: decryptedAadhaar,
       },
     });
   } catch (err) {
